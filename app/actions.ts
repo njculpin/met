@@ -3,6 +3,7 @@ import axios from "axios";
 import { Department, Object, SearchParams } from "./types";
 
 const ROOT_URL = "https://collectionapi.metmuseum.org";
+const MAX_COUNT = 80;
 
 /**
  *  Get List of Departments to Search
@@ -27,27 +28,14 @@ export async function GetDepartments(): Promise<Department[]> {
  *
  * @returns Object[] returns an array of Objects
  */
-export async function GetBrowseData(): Promise<Object[]> {
-  let objects: Object[] = [];
-  const objectIds: number[] = await Browse();
-  for (let i = 0; i < objectIds.length; i++) {
-    const object = await GetObjectById(objectIds[i]);
-    if (!object) {
-      continue;
-    }
-    objects.push(object);
-  }
-  return objects;
-}
-
-async function Browse() {
+export async function GetBrowseData(): Promise<number[]> {
   try {
     const URL = ROOT_URL + "/public/collection/v1/objects";
     const req = await axios.get(URL);
     if (!req.data) {
       return [];
     }
-    const objectIds = req.data.objectIDs.slice(0, 80);
+    const objectIds = req.data.objectIDs.slice(0, MAX_COUNT);
     if (!objectIds) {
       return [];
     }
@@ -56,28 +44,6 @@ async function Browse() {
     // todo: handle errors for bad objects
     return [];
   }
-}
-
-/**
- * @param searchParams SearchParams
- * @returns Object[] returns an array of Objects
- */
-export async function GetSearchData(
-  searchParams: SearchParams
-): Promise<Object[]> {
-  let objects: Object[] = [];
-  const objectIds: number[] = await Search(searchParams);
-  for (let i = 0; i < objectIds.length; i++) {
-    const object = await GetObjectById(objectIds[i]);
-    if (!object) {
-      continue;
-    }
-    if (object.classification !== searchParams.q) {
-      continue;
-    }
-    objects.push(object);
-  }
-  return objects.slice(0, 80);
 }
 
 /**
@@ -96,7 +62,9 @@ export async function GetSearchData(
  * @param dateEnd Returns objects that match the query and fall between the dateEnd parameters. Must include dateBegin.
  * @returns number[] Returns an array of objectIds
  */
-async function Search(searchParams: SearchParams): Promise<number[]> {
+export async function GetSearchData(
+  searchParams: SearchParams
+): Promise<number[]> {
   try {
     let URL = ROOT_URL + "/public/collection/v1/search";
     let terms: string[] = [];
@@ -122,6 +90,7 @@ async function Search(searchParams: SearchParams): Promise<number[]> {
         URL += "&";
       }
     }
+    console.log(URL);
     const req = await axios.get(URL);
     if (!req.data.objectIDs) {
       return [];
@@ -130,7 +99,7 @@ async function Search(searchParams: SearchParams): Promise<number[]> {
     if (!objectIds) {
       return [];
     }
-    return objectIds;
+    return objectIds.slice(0, MAX_COUNT);
   } catch (e) {
     // todo: handle errors for bad objects
     return [];

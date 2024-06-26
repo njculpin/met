@@ -1,3 +1,4 @@
+"use client";
 import { Field, Label, Switch } from "@headlessui/react";
 
 function classNames(...classes: string[]) {
@@ -21,7 +22,7 @@ export function ImageFilterForm({
         onChange={setHasImages}
         className={classNames(
           hasImages ? "bg-button_blue" : "bg-gray-200",
-          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-button_blue focus:ring-offset-2"
+          "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
         )}
       >
         <span
