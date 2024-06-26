@@ -68,7 +68,6 @@ export async function GetSearchData(
   try {
     let URL = ROOT_URL + "/public/collection/v1/search";
     let terms: string[] = [];
-
     if (searchParams.departmentId) {
       terms.push(`departmentId=${searchParams.departmentId}`);
     }

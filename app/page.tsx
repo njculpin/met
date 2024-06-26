@@ -24,6 +24,12 @@ export default function Page({
   const [hasImages, setHasImages] = useState<boolean>(false);
   const [sort, setSort] = useState<number>(0);
 
+  /*
+  Retrieve Initial Data
+  This is simply the Get All objects call from
+  the MET Api, we add values to setObjectIds
+  which will then trigger a slow load
+  */
   useEffect(() => {
     async function GetData() {
       setLoading(true);
@@ -34,10 +40,12 @@ export default function Page({
     GetData();
   }, []);
 
-  useEffect(() => {
-    setObjectIds([]);
-  }, [query]);
-
+  /*
+  Search Query
+  This calls the MET Api search end point,
+  we add values to setObjectIds which
+  will then trigger a slow load
+  */
   useEffect(() => {
     async function GetData() {
       if (!query) {
@@ -52,6 +60,12 @@ export default function Page({
     GetData();
   }, [query]);
 
+  /*
+  Slow Load
+  To improve the perceived performance of the page
+  we load each objectId one at a time and set the
+  object to state as soon as it loads.
+  */
   useEffect(() => {
     async function slowLoad() {
       const copy = [...objectIds];
@@ -71,6 +85,9 @@ export default function Page({
     slowLoad();
   }, [objectIds]);
 
+  /*
+  Sort by time on loaded data
+  */
   useEffect(() => {
     async function sortData() {
       if (sort === 1) {
@@ -86,8 +103,12 @@ export default function Page({
       }
     }
     sortData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sort]);
 
+  /*
+  Filter out broken images
+  */
   useEffect(() => {
     async function filterData() {
       if (!hasImages) {
@@ -102,6 +123,7 @@ export default function Page({
       }
     }
     filterData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasImages]);
 
   return (

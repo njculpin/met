@@ -1,10 +1,5 @@
 ## The Metropolitan Museum of Art Collection
 
-## API
-
-/api/search
-/api/departments
-
 https://metmuseum.github.io/
 
 ## Getting Started
@@ -25,3 +20,7 @@ You can learn more about this here: https://jestjs.io/
 ```bash
 npm run test
 ```
+
+## Preview
+
+https://met-nine.vercel.app/
