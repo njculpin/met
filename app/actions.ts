@@ -1,9 +1,8 @@
+"use server";
 import axios from "axios";
 import { Department, Object, SearchParams } from "./types";
-import { revalidatePath } from "next/cache";
 
 const ROOT_URL = "https://collectionapi.metmuseum.org";
-const MAX_OBJECTS = 80;
 
 /**
  *  Get List of Departments to Search
@@ -17,7 +16,6 @@ export async function GetDepartments(): Promise<Department[]> {
       return [];
     }
     const departments = req.data.departments;
-    revalidatePath("/");
     return departments;
   } catch (e) {
     // todo: handle errors for bad objects
@@ -29,21 +27,9 @@ export async function GetDepartments(): Promise<Department[]> {
  *
  * @returns Object[] returns an array of Objects
  */
-export async function GetObjects({
-  searchParams,
-}: {
-  searchParams?: SearchParams;
-}): Promise<Object[]> {
+export async function GetBrowseData(): Promise<Object[]> {
   let objects: Object[] = [];
-  let objectIds: number[] = [];
-  if (!searchParams) {
-    return [];
-  }
-  objectIds = await Search(searchParams);
-  if (!objectIds.length) {
-    const res = await Browse();
-    objectIds = res;
-  }
+  const objectIds: number[] = await Browse();
   for (let i = 0; i < objectIds.length; i++) {
     const object = await GetObjectById(objectIds[i]);
     if (!object) {
@@ -51,18 +37,17 @@ export async function GetObjects({
     }
     objects.push(object);
   }
-  revalidatePath("/");
   return objects;
 }
 
-async function Browse(): Promise<number[]> {
+async function Browse() {
   try {
     const URL = ROOT_URL + "/public/collection/v1/objects";
     const req = await axios.get(URL);
     if (!req.data) {
       return [];
     }
-    const objectIds = req.data.objectIDs.slice(0, MAX_OBJECTS);
+    const objectIds = req.data.objectIDs.slice(0, 80);
     if (!objectIds) {
       return [];
     }
@@ -71,6 +56,28 @@ async function Browse(): Promise<number[]> {
     // todo: handle errors for bad objects
     return [];
   }
+}
+
+/**
+ * @param searchParams SearchParams
+ * @returns Object[] returns an array of Objects
+ */
+export async function GetSearchData(
+  searchParams: SearchParams
+): Promise<Object[]> {
+  let objects: Object[] = [];
+  const objectIds: number[] = await Search(searchParams);
+  for (let i = 0; i < objectIds.length; i++) {
+    const object = await GetObjectById(objectIds[i]);
+    if (!object) {
+      continue;
+    }
+    if (object.classification !== searchParams.q) {
+      continue;
+    }
+    objects.push(object);
+  }
+  return objects.slice(0, 80);
 }
 
 /**
@@ -97,9 +104,6 @@ async function Search(searchParams: SearchParams): Promise<number[]> {
     if (searchParams.departmentId) {
       terms.push(`departmentId=${searchParams.departmentId}`);
     }
-    if (searchParams.medium) {
-      terms.push(`medium=${searchParams.medium.split(",").join("%7C")}`);
-    }
     if (searchParams.q) {
       terms.push(`q=${searchParams.q.toLowerCase()}`);
     }
@@ -122,7 +126,7 @@ async function Search(searchParams: SearchParams): Promise<number[]> {
     if (!req.data.objectIDs) {
       return [];
     }
-    const objectIds = req.data.objectIDs.slice(0, MAX_OBJECTS);
+    const objectIds = req.data.objectIDs;
     if (!objectIds) {
       return [];
     }
